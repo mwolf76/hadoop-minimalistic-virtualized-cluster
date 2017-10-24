@@ -1,0 +1,10 @@
+README
+======
+
+This directory will contain auto-generated SSH keys for the
+cluster. All machines in the cluster will share the same keys.
+
+Files in this directory should not be deleted during the provisioning
+process, but can be safely removed afterwards.
+
+

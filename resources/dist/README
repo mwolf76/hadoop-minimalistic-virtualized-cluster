@@ -1,0 +1,11 @@
+README
+======
+
+This directory will contain the binary dist tarball for Apache
+Hadoop. The file must be manually downloaded before provisioning the
+cluster.
+
+Download the dist tarball from https://hadoop.apache.org/releases.html
+and adjust the version number in the Vagrantfile accordingly.
+
+
