@@ -14,6 +14,8 @@ apt-get update
 echo "Installing OpenJDK 8 JRE (headless) ..."
 apt-get install -y openjdk-8-jre-headless
 
+echo "Writing host configuration ..."
+
 # Static cluster nodes name resolution
 cat >> /etc/hosts <<-EOF
 	## Cluster nodes
@@ -33,3 +35,4 @@ cat >> /etc/ssh/ssh_config <<-EOF
 cat >> /etc/environment <<-EOF
 	export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
 	EOF
+

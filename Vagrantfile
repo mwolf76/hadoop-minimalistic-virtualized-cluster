@@ -13,6 +13,10 @@ URLS:
  - History Server       - http://localhost:19888
  - HDFS/DataNode health - http://localhost:50070
 
+NFS:
+
+  $ mount -t nfs 192.168.10.10:/ hdfs
+
 ------------------------------------------------------
 MSG
 
@@ -24,103 +28,79 @@ Vagrant.configure("2") do |config|
   # silence generic box post-up message
   config.vm.post_up_message = ""
 
-  config.vm.provider "virtualbox" do |vb|
-    # Customize the amount of memory on the VM:
-    vb.memory = "1024"
+  # slaves
+  (1..3).each do |i|
+    config.vm.define "slave#{i}" do |node|
+      node.vm.network "private_network", ip: "192.168.10.1#{i}"
+      node.vm.hostname = "slave1.local"
+
+      node.vm.provision :shell,
+                        :path => "resources/scripts/host/common.sh",
+                        :name => "Host setup (common)",
+                        :args => $hadoop_version
+
+      node.vm.provision :shell,
+                        :path => "resources/scripts/host/slave.sh",
+                        :name => "Host setup (slave)",
+                        :args => $hadoop_version
+
+      node.vm.provision :shell,
+                        :path => "resources/scripts/user/wrapper.sh",
+                        :name => "User setup (common)",
+                        :args => ["common.sh", $hadoop_version]
+
+      node.vm.provision :shell,
+                        :path => "resources/scripts/user/wrapper.sh",
+                        :name => "User setup (slave)",
+                        :args => ["slave.sh", $hadoop_version]
+
+      node.vm.provider "virtualnode" do |vb|
+        # Customize the amount of memory on the VM:
+        vb.memory = "512"
+      end
+    end
   end
 
-  # Multi-machine configuration
-  config.vm.define :slave1 do |box|
-    box.vm.network "private_network", ip: "192.168.10.11"
-    box.vm.hostname = "slave1.local"
+  # Master
+  config.vm.define "master", primary: true do |node|
+    node.vm.network "forwarded_port", guest: 8088,  host: 8088
+    node.vm.network "forwarded_port", guest: 19888, host: 19888
+    node.vm.network "forwarded_port", guest: 50070, host: 50070
 
-    box.vm.provision :shell,
-                     :path => "resources/scripts/host.sh",
-                     :name => "Host setup",
-                     :args => $hadoop_version
+    node.vm.provider "virtualnode" do |vb|
+      # Customize the amount of memory on the VM:
+      vb.memory = "1024"
+    end
+    
+    node.vm.network "private_network", ip: "192.168.10.10"
+    node.vm.hostname = "master.local"
 
-    box.vm.provision :shell,
-                     :path => "resources/scripts/user/wrapper.sh",
-                     :name => "(as vagrant) common script",
-                     :args => ["common.sh", $hadoop_version]
+    node.vm.provision :shell,
+                      :path => "resources/scripts/host/common.sh",
+                      :name => "Host setup (common)",
+                      :args => $hadoop_version
 
-    box.vm.provision :shell,
-                     :path => "resources/scripts/user/wrapper.sh",
-                     :name => "(as vagrant) slave script",
-                     :args => ["slave.sh", $hadoop_version]
+    node.vm.provision :shell,
+                      :path => "resources/scripts/host/master.sh",
+                      :name => "Host setup (master)",
+                      :args => $hadoop_version
 
-  end
+    node.vm.provision :shell,
+                      :path => "resources/scripts/user/wrapper.sh",
+                      :name => "User setup (common)",
+                      :args => ["common.sh", $hadoop_version]
 
-  config.vm.define :slave2 do |box|
-    box.vm.network "private_network", ip: "192.168.10.12"
-    box.vm.hostname = "slave2.local"
+    node.vm.provision :shell,
+                      :path => "resources/scripts/user/wrapper.sh",
+                      :name => "User setup (master)",
+                      :args => ["master.sh", $hadoop_version]
 
-    box.vm.provision :shell,
-                     :path => "resources/scripts/host.sh",
-                     :name => "Host setup",
-                     :args => $hadoop_version
+    node.vm.provision :shell,
+                      :path => "resources/scripts/user/wrapper.sh",
+                      :name => "(as vagrant) master script",
+                      :args => ["start-hdfs.sh", $hadoop_version],
+                      :run  => "always"
 
-    box.vm.provision :shell,
-                     :path => "resources/scripts/user/wrapper.sh",
-                     :name => "(as vagrant) common script",
-                     :args => ["common.sh", $hadoop_version]
-
-    box.vm.provision :shell,
-                     :path => "resources/scripts/user/wrapper.sh",
-                     :name => "(as vagrant) slave script",
-                     :args => ["slave.sh", $hadoop_version]
-
-  end
-
-  config.vm.define :slave3 do |box|
-    box.vm.network "private_network", ip: "192.168.10.13"
-    box.vm.hostname = "slave3.local"
-
-    box.vm.provision :shell,
-                     :path => "resources/scripts/host.sh",
-                     :name => "Host setup",
-                     :args => $hadoop_version
-
-    box.vm.provision :shell,
-                     :path => "resources/scripts/user/wrapper.sh",
-                     :name => "(as vagrant) common script",
-                     :args => ["common.sh", $hadoop_version]
-
-    box.vm.provision :shell,
-                     :path => "resources/scripts/user/wrapper.sh",
-                     :name => "(as vagrant) slave script",
-                     :args => ["slave.sh", $hadoop_version]
-  end
-
-  config.vm.define :master, primary: true do |box|
-    box.vm.network "forwarded_port", guest: 8088,  host: 8088
-    box.vm.network "forwarded_port", guest: 19888, host: 19888
-    box.vm.network "forwarded_port", guest: 50070, host: 50070
-
-    box.vm.network "private_network", ip: "192.168.10.10"
-    box.vm.hostname = "master.local"
-
-    box.vm.provision :shell,
-                     :path => "resources/scripts/host.sh",
-                     :name => "Host setup",
-                     :args => $hadoop_version
-
-    box.vm.provision :shell,
-                     :path => "resources/scripts/user/wrapper.sh",
-                     :name => "(as vagrant) common script",
-                     :args => ["common.sh", $hadoop_version]
-
-    box.vm.provision :shell,
-                     :path => "resources/scripts/user/wrapper.sh",
-                     :name => "(as vagrant) master script",
-                     :args => ["master.sh", $hadoop_version]
-
-    box.vm.provision :shell,
-                     :path => "resources/scripts/user/wrapper.sh",
-                     :name => "(as vagrant) master script",
-                     :args => ["start-hdfs.sh", $hadoop_version],
-                     :run  => "always"
-
-    box.vm.post_up_message = $master_msg
+    node.vm.post_up_message = $master_msg
   end
 end

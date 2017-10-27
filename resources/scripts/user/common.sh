@@ -22,34 +22,8 @@ cp /vagrant/resources/keys/id_rsa.pub ~/.ssh
 # append public key to authorized keys
 cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
 
+# FIXME: Not so sure this belongs here :-/
 echo "Writing common hadoop configuration ..."
-
-echo "-- core-site.xml"
-cat > ~/hadoop/etc/hadoop/core-site.xml <<EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
-<!--
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License. See accompanying LICENSE file.
--->
-
-<!-- Put site-specific property overrides in this file. -->
-<configuration>
-  <property>
-    <name>fs.defaultFS</name>
-    <value>hdfs://master.public:9000</value>
-  </property>
-</configuration>
-EOF
 
 echo "-- yarn-site.xml"
 cat > ~/hadoop/etc/hadoop/yarn-site.xml <<EOF
@@ -123,6 +97,6 @@ export PATH=~/hadoop/bin:~/hadoop/sbin:$PATH
 EOF
 
 cat >> ~/.bash_aliases <<EOF
-# jps is distributed in jdk package, this will do ...
-alias jps="ps -aux | grep java | grep -v grep | awk '{print \$2, \$NF}'"
+# jps program is distributed only in jdk package, this will do for us ...
+alias jps="ps -aux | grep java | grep -v grep | awk '{print \\\$2, \\\$NF}'"
 EOF
