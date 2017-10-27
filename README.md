@@ -10,6 +10,7 @@ Having a quick and effective way to setup a virtualized cluster for development.
 * Based on Debian 9.2 (Stretch), 64 bit contrib image.
 * Minimalistic install, OpenJDK 8 headless JRE.
 * Shell-based provisioning.
+* NFS support.
 
 ## Requirements
 
